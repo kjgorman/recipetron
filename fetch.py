@@ -12,8 +12,6 @@ from sys import argv
 import sys
 
 savingsDict = {}
-items = [] #pretty redundant storing these all here. was thinking of weakref-ing them
-           #or something but couldn't be bothered basically
 
 def setup():
 
@@ -40,7 +38,7 @@ def setup():
       sys.exit(1)
 
   page = resp.read()
-  #Obviouslt the number of savings week by week so we need to fetch this first.
+  #Obviously the number of savings week by week so we need to fetch this first.
   max_pages = re.compile('title="Last page" class="arrow" href="/savings/\?page=(?P<npages>\d+)')
   m = max_pages.search(page)
   num_pages =  m.group('npages')
@@ -59,15 +57,57 @@ def setup():
   while True:
     item = raw_input('What are you looking for today? (or \'q\' to quit)\n')
     if item == 'q': break
-    item_re = re.compile(item, re.I)
+    try:
+      matches = []
+      query = re.compile("((?P<price_limit>~\$([<>=]|<=|>=)\d+(\.\d\d)?))?\s*((?P<op>&|\|))?\s*(?P<reg_query>.*)")
+     
+      qElems = query.search(item).groupdict()
+      priceLim = qElems['price_limit']
+      operator = qElems['op']
+      rest = qElems['reg_query']
+      if priceLim: 
+        matches = searchByPrice(priceLim)
+        if operator == '&':
+          matches = set(matches).intersection(search(rest))
+        else:
+          matches = set(matches).union(search(rest))
+      else:
+        matches = search(rest)
+      if len(matches) == 0: print "Sorry, no matching savings were found"
+      for match in matches:
+        print lineEntry(match[0], match[1])
+    except:
+      print "Sorry, that input broke something : (, try again with something less ridic"
+
+def lineEntry(item, price):
+    return 'Possible match\t|cost: %s%s|item: %s' % (price, '\t\t' if len(price) < 7 else '\t',  item)
+
+def searchByPrice(item):
+    ops = {'<': (lambda x, y: x < y), '>': (lambda x,y:x > y), '<=': (lambda x, y: x <= y), '>=' : (lambda x, y: x >=y), '=' : (lambda x,y: x == y)}
+    opre = re.compile("~\$(?P<opcode>[<>=]|<=|>=)(?P<price>\d+(\.\d\d)?)")
+    res = opre.search(item)
+    
+    op = ops[res.groupdict()['opcode']]
     possible_matches = []
-    for item in items:
+    for el, price in savingsDict.items():
+      if 'for' in price:
+        if op(float(price.split()[2]), float(res.groupdict()['price'])):
+          possible_matches.append((el, price))
+      elif op(float(price), float(res.groupdict()['price'])):
+        possible_matches.append((el, price))
+      
+    return possible_matches
+
+def search(item):
+    try:
+      item_re = re.compile(item, re.I)
+    except:
+      return 'Whoa, that input broke this whole thing... maybe try something less ridiculous'
+    possible_matches = []
+    for (item, price) in savingsDict.items():
       if item_re.search(item):
-        possible_matches.append(item)
-    if len(possible_matches) == 0:
-      print 'Sorry, no savings found for input keyword(s)'
-    for possible in possible_matches:
-      print 'Possible match\t|cost: %s%s|item: %s' % (savingsDict[possible], '\t\t' if len(savingsDict[possible]) < 7 else '\t',  possible)
+        possible_matches.append((item, price))
+    return possible_matches
  
 
 class PageReader(threading.Thread):
@@ -77,7 +117,6 @@ class PageReader(threading.Thread):
     self.opener = opener
     self.baseURL = baseURL
     self.pageNum = pageNum
-    savingsDict[pageNum] = {}
 
   def run(self):
     #reads each item and it's price via regular expressions
@@ -87,7 +126,6 @@ class PageReader(threading.Thread):
     matches = h4.findall(body)
     for match in matches:
       savingsDict[match[0]] = '%s.%s' % (match[1], match[2])
-      items.append(match[0])
 
 
 if __name__ == '__main__':
