@@ -8,8 +8,15 @@ $(document).ready(function() {
     'monochrome' : false
     }).css('background-color', '#fff9ad'); 
 
+	function randomAnimation(){
+		var anims = ['bounceInLeft', 'bounceInRight', 'bounceIn', 'fadeInLeftBig', 'fadeInRightBig', 'fadeInUpBig',
+		             'fadeInDownBig', 'rotateInDownRight', 'rotateInDownLeft', 'rotateInUpRight', 'rotateInUpLeft',
+		             'lightSpeedIn'];
+		return anims[Math.floor(Math.random()*anims.length)];
+	}
+
 	function renderElement(element){
-		$("<div class='line-item'>"
+		$("<div class='line-item animated "+randomAnimation()+"''>"
 		 +"<span class='item'>&times;"+element.item+"</span>"
 		 +"<span class='price'>"+element.price+"</span>"
 		 +"</div")
@@ -18,7 +25,6 @@ $(document).ready(function() {
 
 	function poll(){
 		$.post('/poll', function(data){
-			console.log(data);
 			if(data.data){
 				$("#spinner").hide();
 				$(".line-item").remove();
