@@ -1,4 +1,4 @@
-#Insert snappy name here
+#[Recipetron](http://recipetron.jit.su)
 
 Building off the NW savings scraper this website lets
 people input recipes and automatically calculates the
