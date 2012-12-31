@@ -19,10 +19,9 @@ function setup(){
 	};
 
 	this.scrapePage = function(pageNumber, callback){
-		var pageReq = {
-    		uri:"http://www.newworld.co.nz/savings/?page="+pageNumber
-    	   ,headers:{"Cookie":"new-world-store-id=storenodeid=1260"}
-    	};
+		var pageReq = fillRequestDetails();
+    	pageReq['uri'] = "http://www.newworld.co.nz/savings/?page="+pageNumber
+    	   
 		
 		request(pageReq, function(error, response, body){
 			if(!error & response.statusCode === 200){
@@ -46,10 +45,9 @@ function setup(){
     }
 
     this.getTotalNumberOfPages = function(callback){
-    	var req = {
-    		uri:"http://www.newworld.co.nz/savings/"
-    	   ,headers:{"Cookie":"new-world-store-id=storenodeid=1260"}
-    	};
+    	var req = fillRequestDetails();
+     	req['uri'] = "http://www.newworld.co.nz/savings/"
+    	   
     	request(req, function(error, response, body){
     		if(!error & response.statusCode === 200){
     			var pageCapture = /title="Last page" class="arrow" href="\/savings\/\?page=(\d+)/;
@@ -62,6 +60,26 @@ function setup(){
     	});
     };
  
+    this.fillRequestDetails = function(){
+    	var pageReq = {
+		   headers:{'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.101 Safari/537.11'}
+		};
+
+		var cookieJar = request.jar();
+		cookieJar.add(request.cookie('new-world-store-id=storenodeid=1260'));
+		cookieJar.add(request.cookie('new-world-shopping=[{"Id":999,"Text":"My Shopping List","IsActive":true,"Items":[]}]'));
+		cookieJar.add(request.cookie('new-world-favs=[]'));
+		cookieJar.add(request.cookie('__utma=264539792.1566992007.1356917641.1356917641.1356917641.1'));
+		cookieJar.add(request.cookie('__utmc=264539792'));
+		cookieJar.add(request.cookie('__utmz=264539792.1356917641.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none);'));
+		cookieJar.add(request.cookie('__atuvc=15%7C1'));
+		pageReq['jar'] = cookieJar;
+		pageReq['referer'] = 'http://www.newworld.co.nz/lower-north-island/wellington/thorndon/';
+		pageReq['Connection'] = 'keep-alive';
+
+		return pageReq;
+    }
+
 	return {
 		scrape : this.scrape
 	}
