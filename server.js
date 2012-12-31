@@ -2,7 +2,8 @@ var express        = require('express')
    ,app            = express()
    ,scraper        = require('./scrape')
    ,cookieSessions = require('./cookie-sessions')
-   ,Guid           = require('guid');
+   ,Guid           = require('guid')
+   ,redisClient    = require('redis').createClient();
 
 
 
@@ -50,11 +51,38 @@ app.post('/poll', function(req, res){
 app.post('/search', function(req, res){
 	req.session.sid = req.session.sid || Guid.create();
 	try{
-		scraper.scrape(req.body.keyword, function(data){
-			pollData[req.session.sid] = data;
-			res.send(200, {status: "all good yo"});
-		});
+		redisClient.get("lastUpdated", function(err, reply){
+			if(reply == null){
+				redisClient.set("lastUpdated", (new Date()).toUTCString());
+			}else{
+				var lastUpdateDate = new Date(reply)
+				   ,current = new Date();
+				if(current - lastUpdateDate > (7*24*60*60*1000)) {
+					scraper.scrape(req.body.keyword, function(data){
+						redisClient.set("data", JSON.stringify(data));
+						redisClient.set("lastUpdated", new Date().toUTCString());
+						pollData[req.session.sid] = data;
+						res.send(200, {status: "all good yo"});
+					});
+				}else{
+					redisClient.get("data", function(err, reply){
+						var data = JSON.parse(reply);
+						var searchedData = {};
+						var re = new RegExp(req.body.keyword, "i");
+						for(var page in data){
+							searchedData[page] = [];
+							for(var itemIdx = 0; itemIdx < data[page].length; itemIdx++){
+								if(re.test(data[page][itemIdx].item)) searchedData[page].push(data[page][itemIdx]);
+							}
+						}
+						pollData[req.session.sid] = searchedData;
+						res.send(200, {status: "all good yo"});
+					});
+				}
+			}
+		})		
 	}catch(err){
+		console.error('failed with:', err)
 		res.send(500, {error: err});
 	}
 });
