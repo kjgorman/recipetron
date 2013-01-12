@@ -32,7 +32,7 @@ body {
 .main-container {
   margin-top: 20px;
   padding-top: 10px;
-  width:620px;
+  width:820px;
   height:100%;
   min-height: 920px;
   margin: 0 auto 0 auto;
@@ -52,7 +52,7 @@ body {
     font-size: 1.5em;
     color:#6068A9;
     width:100%;
-    border-bottom: 2px solid #92171B;;
+    border-bottom: 2px solid #92171B;
 }
 
 .content-body {
@@ -78,7 +78,20 @@ body {
 }
 
 .price {
-	color: #675DF4;
+  margin-left:10px;
+  color: #92171B;
+}
+
+div.header {
+  font-family: QuicksandBoldOblique, Helvetica, Arial, sans-serif;
+  font-size: 1.6em;
+  color: #6068A9; 
+}
+
+div.ingredient {
+  font-family: QuicksandBoldOblique, Helvetica, Arial, sans-serif;
+  font-size: 1.5em;
+  color: #92171B;
 }
 
 .text-in {

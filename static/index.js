@@ -9,22 +9,60 @@ $(document).ready(function() {
 	}
 
 	function renderElement(element){
-		$("<div class='line-item animated "+randomAnimation()+"''>"
-		 +"<span class='item'>&times;"+element.item+"</span>"
-		 +"<span class='price'>"+element.price+"</span>"
-		 +"</div")
-		.appendTo($(".main-container"));
+	    $("<div class='line-item'>"
+	      +"<span class='item'>&times;"+element.item+"</span>"
+	      +"<span class='price'>"+element.price+"</span>"
+	      +"</div")
+		.appendTo($(".content-preview"));
+	}
+
+	function renderSavingsAsPercentage(data){
+	    var numWithMatches = 0;
+	    data.map(function(a) { numWithMatches += a[Object.keys(a)[0]].length == 0 ? 0 : 1; });
+	    
+
+            
+	    var percentage = (numWithMatches/(data.length-1))*100;
+	    //probably going to put raphael in here at some point to animate a cool progress bar thing
+	    $("<div class='header'>"
+	      +"<span>This recipe is </span><span class='"+percentage+"-percent'>"+(""+percentage).substr(0,4)+"%</span> on sale this week!</span>"
+	     +"</div>")
+	    .appendTo(".content-preview"); 
+	    $("."+percentage+"-percent").css("color",getColour(percentage));
+	}
+
+	function renderIngredientHeader(ingredient){
+	    $("<div class='ingredient'>"
+	      +"<span>"+ingredient+"</span>"
+             +"</div>")
+	    .appendTo(".content-preview");	
+	}
+
+	function getColour(percent) {
+	    var hue = (percent/100) * 0.4
+		,saturation = 0.7
+		,brightness = 0.4;
+	    return Color.hsl(hue, saturation, brightness).hexTriplet();
 	}
 
 	function poll(){
 		$.post('/poll', function(data){
+			console.log(data);
 			if(data.data){
-				$("#spinner").hide();
-				$(".line-item").remove();
-				if(!data.data.length) renderElement({item:"Sorry, we got nothin'", price:""});
-				for(var i = 0; i < data.data.length; i++){
-					renderElement(data.data[i]);
+			    $(".content-preview").html("");
+			    $("#spinner").hide();
+			    $(".line-item").remove();
+			    renderSavingsAsPercentage(data.data);
+			    //if(!data.data.length) renderElement({item:"Sorry, we got nothin'", price:""});
+			    for(var i=0; i<data.data.length; i++ ){
+				var ingredient = Object.keys(data.data[i])[0];
+				if(data.data[i][ingredient].length > 0){
+				    renderIngredientHeader(ingredient);
+				    for(var j=0; j<data.data[i][ingredient].length; j++){
+					renderElement(data.data[i][ingredient][j]);
+				    }
 				}
+			    }
 			}else{
 				setTimeout(function(){ poll(); }, 1000);
 			}

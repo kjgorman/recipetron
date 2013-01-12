@@ -24,7 +24,8 @@ var pollData = {};
 function flatten(data, continuation){
 	var flattened = [];
 	for(var i in data){
-		flattened = flattened.concat(data[i]);
+      var obj = {}; obj[i] = data[i]
+			flattened = flattened.concat(obj);
 	}
 	continuation(flattened);
 }
@@ -37,12 +38,10 @@ app.get('/', function(req, res){
 
 app.post('/poll', function(req, res){
     if(req.session.sid && pollData[req.session.sid]){
-
-    	flatten(pollData[req.session.sid], function(data){
-    		res.send(200, {data:data, status:'complete'});
-			pollData[req.session.sid] = undefined;
-    	});
-
+		    flatten(pollData[req.session.sid], function(data){
+				  res.send(200, {data:data, status:'complete'});
+				  pollData[req.session.sid] = undefined;
+				});
     }else{
     	res.send(200, {status: 'continue'});
     }
@@ -80,15 +79,36 @@ app.post('/search', function(req, res){
 });
 
 function filterData(keywords, data) {
+
+	if(keywords === undefined || data === undefined) return {};
+  if(typeof keywords !== "string") return {};
   var searchedData = {};
-  var re = new RegExp(keywords, "i");
+  //split the keywords out, kill whitespace, and then order by length
+  //so when we compile the regex of terms the alternation will be 
+	// POSIX style greedy. bit inefficient mapping repeatedly, but 
+	//I prefer the functional style so whatever... premature opts are
+	//evil anyway right.
+  var keys = keywords.split(",")
+			.map(function (a) { return a.trim(); })
+      .filter(function(a) { return a !== ""; })
+      .sort(function (a, b) { return a.length < b.length; })
+			.map(function(a) { return a.toLowerCase(); })
+			.map(function(a) { searchedData[a] = []; return a; }) /*initialise return fields*/
+			,keysRex = "("+keys.join("|")+")";
+
+  searchedData["ingredients"] = [] //ensure we always have a place to push
+  console.log("search rex:", keysRex);
+  var re = new RegExp(keysRex, "i");
   for(var page in data){
-      searchedData[page] = [];
       for(var itemIdx = 0; itemIdx < data[page].length; itemIdx++){
-	  if(re.test(data[page][itemIdx].item)) searchedData[page].push(data[page][itemIdx]);
+					var item = data[page][itemIdx], maybeMatch;
+					if(maybeMatch = re.exec(item.item)) {
+              var matchedItem = maybeMatch[0].toLowerCase();
+							(searchedData[matchedItem] || searchedData["ingredients"]).push(data[page][itemIdx]);
+					}
       }
   }				
- return searchedData		
+  return searchedData;		
 }
 
 app.listen(3000);
