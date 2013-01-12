@@ -61,21 +61,13 @@ app.post('/search', function(req, res){
 					scraper.scrape(req.body.keyword, function(data){
 						redisClient.set("data", JSON.stringify(data));
 						redisClient.set("lastUpdated", new Date().toUTCString());
-						pollData[req.session.sid] = data;
+						pollData[req.session.sid] = filterData(req.body.keyword, data);
 						res.send(200, {status: "all good yo"});
 					});
 				}else{
 					redisClient.get("data", function(err, reply){
 						var data = JSON.parse(reply);
-						var searchedData = {};
-						var re = new RegExp(req.body.keyword, "i");
-						for(var page in data){
-							searchedData[page] = [];
-							for(var itemIdx = 0; itemIdx < data[page].length; itemIdx++){
-								if(re.test(data[page][itemIdx].item)) searchedData[page].push(data[page][itemIdx]);
-							}
-						}
-						pollData[req.session.sid] = searchedData;
+						pollData[req.session.sid] = filterData(req.body.keyword, data)
 						res.send(200, {status: "all good yo"});
 					});
 				}
@@ -86,6 +78,18 @@ app.post('/search', function(req, res){
 		res.send(500, {error: err});
 	}
 });
+
+function filterData(keywords, data) {
+  var searchedData = {};
+  var re = new RegExp(keywords, "i");
+  for(var page in data){
+      searchedData[page] = [];
+      for(var itemIdx = 0; itemIdx < data[page].length; itemIdx++){
+	  if(re.test(data[page][itemIdx].item)) searchedData[page].push(data[page][itemIdx]);
+      }
+  }				
+ return searchedData		
+}
 
 app.listen(3000);
 console.log('server listening on localhost:3000');

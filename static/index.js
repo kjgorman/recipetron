@@ -1,12 +1,5 @@
 $(document).ready(function() {
 	
-	$('body').noisy({
-    'intensity' : 1, 
-    'size' : 200, 
-    'opacity' : 0.081, 
-    'fallback' : 'fff9ad', 
-    'monochrome' : false
-    }).css('background-color', '#fff9ad'); 
 
 	function randomAnimation(){
 		var anims = ['bounceInLeft', 'bounceInRight', 'bounceIn', 'fadeInLeftBig', 'fadeInRightBig', 'fadeInUpBig',

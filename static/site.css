@@ -25,6 +25,10 @@
 
 /*Page structure*/
 
+body {
+  background-color: #fefefe;
+}
+
 .main-container {
   margin-top: 20px;
   padding-top: 10px;
@@ -32,6 +36,8 @@
   height:100%;
   min-height: 920px;
   margin: 0 auto 0 auto;
+  border-radius : 10px;
+  background-color: #fcfcfc;
   -moz-box-shadow:    1px 2px 5px 1px #474200;
   -webkit-box-shadow: 1px 2px 5px 1px #474200;
   box-shadow:         1px 2px 5px 1px #474200;
@@ -44,9 +50,9 @@
 .content-header {
     font-family: QuicksandBoldOblique, Helvetica, Arial, sans-serif;
     font-size: 1.5em;
-    color:#B51C21;
+    color:#6068A9;
     width:100%;
-    border-bottom: 2px solid #B51C21;
+    border-bottom: 2px solid #92171B;;
 }
 
 .content-body {
@@ -68,7 +74,7 @@
 }
 
 .item {
-	color: #B51C21;
+	color: #6068A9;
 }
 
 .price {
@@ -80,7 +86,7 @@
 	margin: 0 auto 15px auto;
 	border-radius: 12px;
 	color:#5e5e5e;
-	font-size:1.75em;
+	font-size:1.2em;
 	-moz-border-radius: 12px;
 	-webkit-border-radius: 12px;
 	text-align:center;
@@ -112,7 +118,7 @@
  font-size: 24px !important;
  width: 100%; 
  position: relative;
- background: #ED6165;
+ background: #A0A5CA;
  color: #fff;
  text-align: center;
  padding: 1em 1em; 
