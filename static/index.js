@@ -20,8 +20,6 @@ $(document).ready(function() {
 	    var numWithMatches = 0;
 	    data.map(function(a) { numWithMatches += a[Object.keys(a)[0]].length == 0 ? 0 : 1; });
 	    
-
-            
 	    var percentage = (numWithMatches/(data.length-1))*100;
 	    //probably going to put raphael in here at some point to animate a cool progress bar thing
 	    $("<div class='header'>"
@@ -71,7 +69,7 @@ $(document).ready(function() {
 
     $(".js-keypress").keyup(function(e){
     	/*submit query on <RET>*/
-    	if(e.keyCode === 13)  {
+	    if(e.keyCode === 13 && $(this).val() != "")  {
     		$("#spinner").show();
     		$.post('/search', {'keyword': $(this).val()}, function(data){
     			if(data.status)
