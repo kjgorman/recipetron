@@ -43,6 +43,32 @@ body {
   box-shadow:         1px 2px 5px 1px #474200;
 }
 
+div.login-form { 
+		float: right;
+    font-size: 1.25em;
+}
+
+div.login-form > input {
+    border-radius: 5px;
+	  -moz-border-radius: 12px;
+ 	  -webkit-border-radius: 12px;
+}
+
+.logged-in {
+    font-family: QuicksandBoldOblique, Helvetica, Arial, sans-serif;
+    font-size: 1.2em;
+    color:#6068A9;
+		padding-right: 10px;
+}
+
+button.logged-in {
+		font-size:0.5em;
+}
+
+button#save-current {
+		float: right;
+}
+
 .content {
 	font-family: QuicksandBook, Helvetica, Arial, sans-serif;
 }

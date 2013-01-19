@@ -16,6 +16,8 @@ app.use(express.bodyParser());
 app.use(express.cookieParser("vangelis"));
 app.use(cookieSessions("sid"));
 
+
+
 //hash from session ids to query data.
 var pollData = {}; 
 
@@ -35,6 +37,8 @@ app.get('/', function(req, res){
 	req.session.sid = req.session.sid || Guid.create(); 
 	res.sendfile('index.html');
 });
+//sign a cookie with the user
+app.post('/', function(req, res) { res.send(req.session.user); });
 
 app.post('/poll', function(req, res){
     if(req.session.sid && pollData[req.session.sid]){
@@ -49,6 +53,7 @@ app.post('/poll', function(req, res){
 
 app.post('/search', function(req, res){
 	req.session.sid = req.session.sid || Guid.create();
+	var response = {status: "all good yo"};
 	try{
 		redisClient.get("lastUpdated", function(err, reply){
 			if(reply == null){
@@ -61,13 +66,13 @@ app.post('/search', function(req, res){
 						redisClient.set("data", JSON.stringify(data));
 						redisClient.set("lastUpdated", new Date().toUTCString());
 						pollData[req.session.sid] = filterData(req.body.keyword, data);
-						res.send(200, {status: "all good yo"});
+							res.send(200, response);
 					});
 				}else{
 					redisClient.get("data", function(err, reply){
 						var data = JSON.parse(reply);
 						pollData[req.session.sid] = filterData(req.body.keyword, data)
-						res.send(200, {status: "all good yo"});
+						res.send(200, response);
 					});
 				}
 			}
@@ -76,6 +81,20 @@ app.post('/search', function(req, res){
 		console.error('failed with:', err)
 		res.send(500, {error: err});
 	}
+});
+
+app.post('/login', function(req, res) {
+		redisClient.get(req.body.uname, function(err, reply) {
+				if(reply == req.body.pwd) req.session.user = req.body.uname;
+        else res.send(403, {status: "denied"});
+				res.send(200, {status: "all good yo", logged_in_as:req.body.uname});
+		});
+
+});
+
+app.post('/logout', function(req, res) {
+		req.session.user = undefined;
+		res.send(200, {status: "all good yo"});
 });
 
 function filterData(keywords, data) {

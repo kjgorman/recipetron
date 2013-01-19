@@ -8,6 +8,11 @@
 
   <body>
     <div class='main-container'>
+			<div class='login-form'>
+				<input  class='logged-out login-username'  type='text'  placeholder='username'></input>
+				<input  class='logged-out login-password'  type='password'  placeholder='password'></input>
+				<button class='logged-out'  id='login-submit'>&raquo;</button>
+			</div>
     	<div class='ribbon bottom-shadow'>
     		<div class='ribbon-border top'>&nbsp;</div>
     		<div class='banner-message'>Recipetron Save-o-matic</div>
@@ -29,6 +34,7 @@
 			</div>
 			<div class='content-body'>
 				<input class='text-in js-keypress' type='text' placeholder='type a comma separated list of items'></input>
+				<button id='save-current'>Save search &raquo;</button>
 				<div id='spinner'><img src="/static/spinner.gif" /></div>
 			</div>
 			<div class='content-preview'>
@@ -41,6 +47,7 @@
      <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js'></script>
      <script type='text/javascript' src='/static/lib/jquery.noisy.min.js'></script>
      <script type='text/javascript' src='/static/lib/color.js'></script>
+		 <script type='text/javascript' src='/static/user.js'></script>
      <script type='text/javascript' src='/static/index.js'></script>
   </footer>
 </html>
