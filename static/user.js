@@ -16,15 +16,19 @@ User.__defineSetter__("currentUser", function(user) {
 })
 
 User.prototype = {
-    login : function(password, callback) {
+    login : function(password, callback, error) {
         $.post("/login", {uname: this.userName, pwd: password},
                function(res) {
                    callback(res.logged_in_as);
+               }).fail(function () {
+                   error && error();
                });
     },
     logout : function() {
-        this.currentUser = undefined;
-        $(".logged-in").remove();
-        $(".logged-out").show();
+        $.post('/logout', function() {
+            User.currentUser = undefined;
+            $(".logged-in").remove();
+            $(".logged-out").show();
+        });
     }
 };

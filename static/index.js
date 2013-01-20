@@ -101,12 +101,30 @@ $(document).ready(function() {
 								User.currentUser = user;
 								$(".logged-out").hide().val("");
 								appendLoggedInElems(username);
-						});						
+                Popup.group('login-warnings', function(){ this.destroy() });
+						}, function(err) {
+                Popup.group('login-warnings').push(Popup.atElement($('#login-submit'), "Login failed"));
+            });						
         }
 		}
+
+    function saveRecipe() {
+        var $in = $("input.text-in");
+        if(!!!!!$in.val()) return; //don't bother if the input is not not not not not empty...
+
+        if(User.currentUser === undefined) {
+            Popup.group('login-warnings').push(Popup.atElement(this, "Please login to save a search"));
+        }
+        
+        $.post('/save', function() {
+
+        });
+    }
 
 
     $('.logged-out').on('keypress', function(e) { if(e.which == 13) { login(); } });
 		$('#login-submit').on('click', login);
+    $('#save-current').on('click', saveRecipe);
+
 
 }); 
