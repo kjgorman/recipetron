@@ -1,6 +1,7 @@
 //creates notification popup thing
 
 function Popup(text, x, y) {
+    var thus = this;
     this.text = text && typeof text === 'string' ? text : null;
     this.x = x && typeof x === 'number' ? x : null;
     this.y = y && typeof y === 'number' ? y-10 : null; 
@@ -13,7 +14,7 @@ function Popup(text, x, y) {
 
     if(!$) throw "Popup depends on jquery because I am lazy"
 
-    this._elem = $("<div class='js-popup "+'arrow_'+arrowDir+"'><span>"+text+"</span></div>");
+    this._elem = $("<div class='js-popup "+'animated bounceInRight'+' arrow_'+arrowDir+"'><span>"+text+"</span></div>");
     this._elem.css({
         "position":"absolute"
         ,"font-family":"Helvetica Neue"
@@ -25,10 +26,13 @@ function Popup(text, x, y) {
         ,"top":this.y
         ,"left":this.x
         ,"z-index":10
+        ,"cursor":"pointer"
     });
     $('body').append(this._elem)
     
+    this._elem[0].onclick = function() { thus.destroy(); };
 }
+
 
 Popup.atElement = function(el, text) {
     if(!el) throw "Cannot call `atElement` without providing an element"
@@ -59,6 +63,6 @@ Popup.prototype = {
         this._elem.append(text);
     },
     destroy : function() {
-        $(this._elem).remove();
+        $(this._elem).fadeOut(250, function() { $(this).remove(); });
     }
 };

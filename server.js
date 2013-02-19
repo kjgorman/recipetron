@@ -38,7 +38,26 @@ app.get('/', function(req, res){
 	res.sendfile('index.html');
 });
 //sign a cookie with the user
-app.post('/', function(req, res) { res.send(req.session.user); });
+app.post('/', function(req, res) { 
+    redisClient.get(req.session.user+"-recipes", function(err, recipeData) {
+        redisClient.get("data", function(err, sales) {
+            var recipes = JSON.parse(recipeData)
+            , output = []
+            , data = JSON.parse(sales);
+            recipes.map(function(recipe) {
+                var filtered = filterData(recipe.join(","), data), out = [];
+
+                recipe.map(function(i) {
+                    i = i.trim();                   
+                    if(Object.keys(filtered).indexOf(i) > -1 && filtered[i].length > 0) out.push({'sale':true, 'ingredient': i});
+                    else out.push({'sale': false, 'ingredient': i});
+                });
+                output.push({'pcnt':Object.keys(filtered).length/recipe.length, 'recipe':out});
+            });
+            res.send({uname:req.session.user, data: output}); 
+        });
+    });
+});
 
 app.post('/poll', function(req, res){
     if(req.session.sid && pollData[req.session.sid]){
@@ -97,6 +116,43 @@ app.post('/logout', function(req, res) {
 		res.send(200, {status: "all good yo"});
 });
 
+app.post('/save', function(req, res) {
+    var recipe = req.body.ingredients
+    ,currentUser = req.session.user;
+    if(!currentUser) res.send(403, {status:"may not save recipes without a username"});
+    var recipeKey = currentUser+"-recipes";
+    redisClient.get(recipeKey, function(err, reply) {
+        if(err) throw err; //whatever...
+        var data = reply === null ? [] : JSON.parse(reply);
+        data.push(recipe)
+        redisClient.set(recipeKey, JSON.stringify(data))
+        res.send(200, {status:"all good yo", data:data});
+    });
+});
+
+app.post('/delete', function(req, res) {
+    if(req.session.user == undefined) return;
+
+    redisClient.get(req.session.user+'-recipes', function(err, reply) {
+        var data = JSON.parse(reply)
+          , matches = [];
+
+        data.map(function(recipe){
+
+            if(recipe.length !== req.body.data.length) return;
+            for(var i = 0, len = req.body.data.length; i <= len; i++) {
+                if(req.body.data[i] != recipe[i]) return;
+            }
+            matches.push(recipe);
+            return;
+        });
+
+        redisClient.set(req.session.user+'-recipes', JSON.stringify(matches));
+        res.send(200, {status:"all good yo"});
+    });
+
+});
+
 function filterData(keywords, data) {
 
 	if(keywords === undefined || data === undefined) return {};
@@ -126,7 +182,8 @@ function filterData(keywords, data) {
 							(searchedData[matchedItem] || searchedData["ingredients"]).push(data[page][itemIdx]);
 					}
       }
-  }				
+  }			
+
   return searchedData;		
 }
 
