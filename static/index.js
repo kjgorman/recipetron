@@ -4,6 +4,8 @@ $(document).ready(function() {
         $(".login-form").append($("<span class='logged-in'>Hi, "+username+"</span>"));
 				$(".login-form").append($("<button class='logged-in' id='logout-submit'>logout</button>"));
 				$("#logout-submit").on('click', function() {
+            $(".js-recipe-container").html("");
+            $("svg").remove();
 						User.currentUser.logout();
 				});
 		}
@@ -50,6 +52,8 @@ $(document).ready(function() {
         });
 
         var $recipes = $(".js-recipe-container");
+        $recipes.html(""); //delete what was there
+        if(recipes.length === 0) return;
         $recipes.append($("<div class='content-header'>Your saved recipes</div>"));
 
         recipes.map(function(recipe) {
@@ -64,8 +68,10 @@ $(document).ready(function() {
 
             $recipes.append($recipe);
             var circ = 35;
+
             var paper = Raphael($recipe.offset().left - 40, $recipe.offset().top - (circ/4), circ, circ);
             paper.partArc(circ/2,circ/2,circ/2,numOnSale,recipe.recipe.length);
+
             var deleteButton = $("<span style='float:right; cursor:pointer; color:#92171B'title='delete'>&times</span>");
             deleteButton.click(function() {
                 //this is legit the most retarded way to this but whatever, if i wanted to write it
@@ -167,6 +173,9 @@ $(document).ready(function() {
 								User.currentUser = user;
 								$(".logged-out").hide().val("");
 								appendLoggedInElems(username);
+                $.post('/', function(data) {
+                    if(data.uname) renderRecipes(data.data);
+                });
                 Popup.group('login-warnings', function(){ this.destroy() });
 						}, function(err) {
                 Popup.group('login-warnings').push(Popup.atElement($('#login-submit'), "Login failed"));
@@ -191,13 +200,34 @@ $(document).ready(function() {
 
         $.post('/save', recipe, function(response) {
             console.log(response);
+            $.post('/', function(data) {
+                if(data.uname) renderRecipes(data.data);
+            });
         });
     }
 
+    function signup() {
+				var $uname, $pwd;
+				if(($uname = $('.login-username').val()) !== "" 
+           && ($pwd = $('.login-password').val()) !== "") {         
+            var user = new User($uname);
+            user.signup($uname, $pwd, function(err) {
+                if (err) Popup.group('signup-warnings').push(Popup.atElement(this, "Signup failed"));
+                else {                
+			              User.currentUser = user;
+								    $(".logged-out").hide().val("");
+								    appendLoggedInElems(username);
+                    $.post('/', function(data) {
+                        if(data.uname) renderRecipes(data.data);
+                    });
+                }
+            });
+        }
+    };
 
     $('.logged-out').on('keypress', function(e) { if(e.which == 13) { login(); } });
 		$('#login-submit').on('click', login);
+    $('#signup-submit').on('click', signup);
     $('#save-current').on('click', saveRecipe);
-
 
 }); 

@@ -3,8 +3,13 @@ var express        = require('express')
    ,scraper        = require('./scrape')
    ,cookieSessions = require('./cookie-sessions')
    ,Guid           = require('guid')
-   ,redisClient    = require('redis').createClient();
-
+   ,redisClient    = require('redis')
+    .createClient(6379, "nodejitsudb9661644143.redis.irstack.com", {no_ready_check:true});
+    
+redisClient.auth("not my password"
+                 , function(err) {
+                     if (err) throw err;
+                 });
 
 
 //static routes
@@ -15,7 +20,6 @@ app.use('/fonts', express.static(__dirname+"/fonts"));
 app.use(express.bodyParser());
 app.use(express.cookieParser("vangelis"));
 app.use(cookieSessions("sid"));
-
 
 
 //hash from session ids to query data.
@@ -37,13 +41,22 @@ app.get('/', function(req, res){
 	req.session.sid = req.session.sid || Guid.create(); 
 	res.sendfile('index.html');
 });
+
 //sign a cookie with the user
 app.post('/', function(req, res) { 
     redisClient.get(req.session.user+"-recipes", function(err, recipeData) {
+        if (err) throw err;
         redisClient.get("data", function(err, sales) {
+            if (err) throw err;
             var recipes = JSON.parse(recipeData)
             , output = []
             , data = JSON.parse(sales);
+
+            if(recipes == null) {
+                res.send({uname: req.session.user, data: []});
+                return;
+            }
+
             recipes.map(function(recipe) {
                 var filtered = filterData(recipe.join(","), data), out = [];
 
@@ -104,6 +117,7 @@ app.post('/search', function(req, res){
 
 app.post('/login', function(req, res) {
 		redisClient.get(req.body.uname, function(err, reply) {
+        console.log(req.body.pwd, reply);
 				if(reply == req.body.pwd) req.session.user = req.body.uname;
         else res.send(403, {status: "denied"});
 				res.send(200, {status: "all good yo", logged_in_as:req.body.uname});
@@ -114,6 +128,16 @@ app.post('/login', function(req, res) {
 app.post('/logout', function(req, res) {
 		req.session.user = undefined;
 		res.send(200, {status: "all good yo"});
+});
+
+app.post('/signup', function(req, res) {
+    if(!req.body.uname) res.send(304, "piss off");
+    redisClient.get(req.body.uname, function(err, reply) {
+        if (reply !== null) res.send(304, "user already exists yo");
+        else { 
+            redisClient.set(req.body.uname, req.body.pwd);
+        }
+    });
 });
 
 app.post('/save', function(req, res) {
@@ -130,7 +154,7 @@ app.post('/save', function(req, res) {
     });
 });
 
-app.post('/delete', function(req, res) {
+app.post('/delete', function(req, res) {    
     if(req.session.user == undefined) return;
 
     redisClient.get(req.session.user+'-recipes', function(err, reply) {
@@ -138,15 +162,15 @@ app.post('/delete', function(req, res) {
           , matches = [];
 
         data.map(function(recipe){
-
-            if(recipe.length !== req.body.data.length) return;
+            console.log(recipe, req.body.data.length);
+            if(recipe.length !== req.body.data.length) return;            
             for(var i = 0, len = req.body.data.length; i <= len; i++) {
-                if(req.body.data[i] != recipe[i]) return;
+                if(req.body.data[i] != recipe[i]) 
+                     matches.push(recipe);
             }
-            matches.push(recipe);
             return;
         });
-
+        console.log(matches);
         redisClient.set(req.session.user+'-recipes', JSON.stringify(matches));
         res.send(200, {status:"all good yo"});
     });

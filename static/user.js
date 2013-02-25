@@ -29,6 +29,17 @@ User.prototype = {
             User.currentUser = undefined;
             $(".logged-in").remove();
             $(".logged-out").show();
+            $(".login-username").focus();
+        });
+    },
+    signup : function(username, password, callback) {
+        var thus = this;
+        $.post('/signup', {uname: this.userName, pwd:password}, function(err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            thus.login(password, callback);
         });
     }
 };
