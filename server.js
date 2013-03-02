@@ -2,7 +2,9 @@ var express        = require('express')
    ,app            = express()
    ,scraper        = require('./scrape')
    ,cookieSessions = require('./cookie-sessions')
-   ,Guid           = require('guid')
+   ,Guid           = require('guid') 
+   ,crypt          = require('crypto')  
+   ,sha            = crypt.createHash('sha1')
    ,redisClient    = require('redis')
     .createClient(6379, "nodejitsudb9661644143.redis.irstack.com", {no_ready_check:true});
     
@@ -117,7 +119,6 @@ app.post('/search', function(req, res){
 
 app.post('/login', function(req, res) {
 		redisClient.get(req.body.uname, function(err, reply) {
-        console.log(req.body.pwd, reply);
 				if(reply == req.body.pwd) req.session.user = req.body.uname;
         else res.send(403, {status: "denied"});
 				res.send(200, {status: "all good yo", logged_in_as:req.body.uname});
@@ -135,7 +136,8 @@ app.post('/signup', function(req, res) {
     redisClient.get(req.body.uname, function(err, reply) {
         if (reply !== null) res.send(304, "user already exists yo");
         else { 
-            redisClient.set(req.body.uname, req.body.pwd);
+            redisClient.set(req.body.uname, sha.update(req.body.pwd).digest);
+            sha = require('sha1'); //docs say: Note: hash object can not be used after digest() method been called.??
         }
     });
 });
