@@ -119,7 +119,10 @@ app.post('/search', function(req, res){
 
 app.post('/login', function(req, res) {
 		redisClient.get(req.body.uname, function(err, reply) {
-				if(reply == req.body.pwd) req.session.user = req.body.uname;
+        var passwordHash = req.body.pwd;
+        sha = crypt.createHash('sha1');
+        passwordHash = sha.update(passwordHash).digest();
+				if(reply == passwordHash) req.session.user = req.body.uname;
         else res.send(403, {status: "denied"});
 				res.send(200, {status: "all good yo", logged_in_as:req.body.uname});
 		});
@@ -133,11 +136,12 @@ app.post('/logout', function(req, res) {
 
 app.post('/signup', function(req, res) {
     if(!req.body.uname) res.send(304, "piss off");
+
     redisClient.get(req.body.uname, function(err, reply) {
         if (reply !== null) res.send(304, "user already exists yo");
         else { 
-            redisClient.set(req.body.uname, sha.update(req.body.pwd).digest);
-            sha = require('sha1'); //docs say: Note: hash object can not be used after digest() method been called.??
+            redisClient.set(req.body.uname, sha.update(req.body.pwd).digest());
+            sha = crypt.createHash('sha1');
         }
     });
 });
@@ -164,7 +168,7 @@ app.post('/delete', function(req, res) {
           , matches = [];
 
         data.map(function(recipe){
-            console.log(recipe, req.body.data.length);
+
             if(recipe.length !== req.body.data.length) return;            
             for(var i = 0, len = req.body.data.length; i <= len; i++) {
                 if(req.body.data[i] != recipe[i]) 
@@ -172,7 +176,7 @@ app.post('/delete', function(req, res) {
             }
             return;
         });
-        console.log(matches);
+
         redisClient.set(req.session.user+'-recipes', JSON.stringify(matches));
         res.send(200, {status:"all good yo"});
     });
@@ -198,7 +202,7 @@ function filterData(keywords, data) {
 			,keysRex = "("+keys.join("|")+")";
 
   searchedData["ingredients"] = [] //ensure we always have a place to push
-  console.log("search rex:", keysRex);
+  
   var re = new RegExp(keysRex, "i");
   for(var page in data){
       for(var itemIdx = 0; itemIdx < data[page].length; itemIdx++){
